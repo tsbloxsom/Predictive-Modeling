@@ -1,0 +1,135 @@
+---
+title: "Q2 - Portfolio modeling"
+output: html_document
+---
+
+```{r, warning=FALSE, message=FALSE}
+library(mosaic)
+library(quantmod)
+library(foreach)
+```
+```{r}
+#### Now use a bootstrap approach
+#### With more stocks
+
+mystocks = c("IWR", "LQD", "VWO", "USO", "VNQI")
+myprices = getSymbols(mystocks, from = "2014-01-01")
+
+```
+IWR = Largest All Cap Equities ETF = All cap equities ETFs are funds that invest in equities of all market capitalizations. These funds may include micro cap, small cap, mid cap or large cap stocks.
+
+LQD = Largest Corporate Bonds ETF = Corporate bonds ETFs invest in debt issued by corporations with investment-grade credit ratings. Bonds included in these funds can feature varying maturities and are issued by companies from multiple industries.
+
+VWO = Largest Emerging Markets Equities ETF = Leveraged ETFs allow investors to boost returns on an index by using financial derivatives and debt. These ETFs are available for most indices such as the S&P 500 and the NASDAQ composite, and deliver returns in multiples of the underlying index.
+
+USO = Largest Oil & Gas ETF = Oil & Gas ETFs invest directly in oil or gas and/or their subsidiary commodities. Note that these funds almost always utilize futures exposure to invest in their respective commodities.
+
+VNQI = Largest Global Real Estate ETF = Global Real Estate ETFs invest in real estate companies from all over the world. These ETFs can offer broad exposure to the industry, or can target specific subsectors such as residential property. In addition, some of these funds focus on the global ex-U.S. market, while others target a specific region or country.
+
+```{r}
+# A chunk of code for adjusting all stocks
+# creates a new object adding 'a' to the end
+# For example, WMT becomes WMTa, etc
+for(ticker in mystocks) {
+	expr = paste0(ticker, "a = adjustOHLC(", ticker, ")")
+	eval(parse(text=expr))
+}
+
+head(IWRa)
+
+```
+```{r}
+# Combine all the returns in a matrix
+all_returns = cbind(	ClCl(IWRa),
+								ClCl(LQDa),
+								ClCl(VWOa),
+								ClCl(USOa),
+								ClCl(VNQIa))
+head(all_returns)
+all_returns = as.matrix(na.omit(all_returns))
+
+```
+```{r}
+# Now simulate many different possible scenarios  
+initial_wealth = 100000
+sim1 = foreach(i=1:5000, .combine='rbind') %do% {
+	total_wealth = initial_wealth
+	weights = c(0.2, 0.2, 0.2, 0.2, 0.2)
+	holdings = weights * total_wealth
+	n_days = 20
+	wealthtracker = rep(0, n_days)
+	for(today in 1:n_days) {
+		return.today = resample(all_returns, 1, orig.ids=FALSE)
+		holdings = holdings + holdings*return.today
+		total_wealth = sum(holdings)
+		wealthtracker[today] = total_wealth
+	}
+	wealthtracker
+}
+
+head(sim1)
+hist(sim1[,n_days], 25)
+
+# Profit/loss
+mean(sim1[,n_days])
+hist(sim1[,n_days]- initial_wealth, breaks=30)
+
+
+```
+```{r}
+# Now simulate many different possible scenarios  
+initial_wealth = 100000
+sim1 = foreach(i=1:5000, .combine='rbind') %do% {
+	total_wealth = initial_wealth
+	weights = c(0.05, 0.3, 0.3, 0.3, 0.05)
+	holdings = weights * total_wealth
+	n_days = 20
+	wealthtracker = rep(0, n_days)
+	for(today in 1:n_days) {
+		return.today = resample(all_returns, 1, orig.ids=FALSE)
+		holdings = holdings + holdings*return.today
+		total_wealth = sum(holdings)
+		wealthtracker[today] = total_wealth
+	}
+	wealthtracker
+}
+
+head(sim1)
+hist(sim1[,n_days], 25)
+
+# Profit/loss
+mean(sim1[,n_days])
+hist(sim1[,n_days]- initial_wealth, breaks=30)
+
+```
+
+```{r}
+# Now simulate many different possible scenarios  
+initial_wealth = 100000
+sim1 = foreach(i=1:5000, .combine='rbind') %do% {
+	total_wealth = initial_wealth
+	weights = c(0.5, 0.1, 0.1, 0.1, 0.2)
+	holdings = weights * total_wealth
+	n_days = 20
+	wealthtracker = rep(0, n_days)
+	for(today in 1:n_days) {
+		return.today = resample(all_returns, 1, orig.ids=FALSE)
+		holdings = holdings + holdings*return.today
+		total_wealth = sum(holdings)
+		wealthtracker[today] = total_wealth
+	}
+	wealthtracker
+}
+
+head(sim1)
+hist(sim1[,n_days], 25)
+
+# Profit/loss
+mean(sim1[,n_days])
+hist(sim1[,n_days]- initial_wealth, breaks=30)
+
+```
+
+
+
+
